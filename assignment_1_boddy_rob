@@ -1,0 +1,84 @@
+------------------------------------------------------------------------------ 
+-- Following few lines automatically added by V-REP to guarantee compatibility 
+-- with V-REP 3.1.3 and later: 
+if (sim_call_type==sim_childscriptcall_initialization) then 
+    simSetScriptAttribute(sim_handle_self,sim_childscriptattribute_automaticcascadingcalls,false) 
+end 
+if (sim_call_type==sim_childscriptcall_cleanup) then 
+ 
+end 
+if (sim_call_type==sim_childscriptcall_sensing) then 
+    simHandleChildScripts(sim_call_type) 
+end 
+if (sim_call_type==sim_childscriptcall_actuation) then 
+    if not firstTimeHere93846738 then 
+        firstTimeHere93846738=0 
+    end 
+    simSetScriptAttribute(sim_handle_self,sim_scriptattribute_executioncount,firstTimeHere93846738) 
+    firstTimeHere93846738=firstTimeHere93846738+1 
+ 
+------------------------------------------------------------------------------ 
+ 
+ 
+-- ****************************************************************************
+    -- ***** The first part  is the setup of system, initialize sensors and varibles.
+    -- ***** You don't need to change something of this part
+    -- ***************************************************************************** 
+    if (simGetScriptExecutionCount()==0) then
+        -- This is executed exactly once, the first time this script is executed
+        BoddyRob=simGetObjectAssociatedWithScript(sim_handle_self)
+        leftMotor=simGetObjectHandle("leftMotor")
+        rightMotor=simGetObjectHandle("rightMotor")
+        TouchSensor=simGetObjectHandle("Touch_Sensor")
+        backUntilTime=-1 
+        FloorSensor=-1
+        FloorSensor=simGetObjectHandle("Floor_Sensor")
+        speed=2
+    end
+    
+    
+    -- *******************************************************************************
+    -- ***** The second part, this is the section where you can do changes of code, 
+    -- ***** to improve the performance of robot
+    -- ******************************************************************************* 
+    
+    simHandleChildScripts(sim_call_type)
+    -- read the Touch sensor
+    TouchAct=simReadProximitySensor(TouchSensor)
+    if (TouchAct>0) then 
+    --  if the touch sensor was activated, provides the robot with 5 seconds to act before recheck the touch sensor 
+        backUntilTime=simGetSimulationTime()+15
+    end
+    
+    -- read the light sensors:
+    LightSensor={false}
+        result,data=simReadVisionSensor(FloorSensor)
+        if (result>=0) then
+    -- data[11] is the intensity of the light
+    -- 0.3 is the threshold to define if there are a black square below of robot
+            LightSensor=(data[11]<0.3) 
+        end
+    
+    -- If light sensor detect black square below of robot, then it is assigned zero to speed
+    if LightSensor then
+        speed=0.1
+    else
+        speed=2
+    end
+    
+    if (backUntilTime<simGetSimulationTime()) then
+        -- When in forward mode, we simply move forward at the desired speed
+        simSetJointTargetVelocity(leftMotor,speed*1.5)
+        simSetJointTargetVelocity(rightMotor,speed*1.5)
+    else
+        -- When in backward mode, we simply move backward at the desired speed
+        simSetJointTargetVelocity(leftMotor,-speed/2)
+        simSetJointTargetVelocity(rightMotor,-speed/2)
+    end
+ 
+ 
+------------------------------------------------------------------------------ 
+-- Following few lines automatically added by V-REP to guarantee compatibility 
+-- with V-REP 3.1.3 and later: 
+end 
+------------------------------------------------------------------------------ 
