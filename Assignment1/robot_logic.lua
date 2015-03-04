@@ -42,7 +42,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
     bumper_detected = simReadProximitySensor(TouchSensor)
     if (bumper_detected > 0) then 
     --  if the touch sensor was activated, provides the robot with 5 seconds to act before recheck the touch sensor 
-        reverse_time = simGetSimulationTime() + 3
+        reverse_time = simGetSimulationTime() + 1
         print("Bumper Detected: Reversing")
     end
 
@@ -61,18 +61,19 @@ if (sim_call_type==sim_childscriptcall_actuation) then
     if square_detected then
         speed= 0
         print("Square Detected: Shutting Down")
+        break
     else 
         speed = 1
     end
 
     if (reverse_time < simGetSimulationTime()) then
         -- When in forward mode, we simply move forward at the desired speed
-        simSetJointTargetVelocity(leftMotor,speed*2.0)
-        simSetJointTargetVelocity(rightMotor,speed*1.3)
+        simSetJointTargetVelocity(leftMotor,speed*6.0)
+        simSetJointTargetVelocity(rightMotor,speed*3.9)
     else
         -- When in backward mode, we simply move backward at the desired speed
-        simSetJointTargetVelocity(leftMotor,-speed*1.7)
-        simSetJointTargetVelocity(rightMotor,speed*1.1)
+        simSetJointTargetVelocity(leftMotor,-speed*5.1)
+        simSetJointTargetVelocity(rightMotor,speed*3.3)
     end
  
  
