@@ -49,12 +49,19 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         Count_Blue = 0
         -- Set the base blue light detected
         Count_Red = 0
+        -- Set a timestamp variable
+        timestamp = 0
     end
     
     -- Calculates the angle and the distance between the robot and the goal
     Dist_Ang_Goal = function()
-        -- Gets the positions of the object and the robot and forms a tuple
+        -- Gets the positions of the goal, relative to the robot returns 
+        -- coordinates as x, y, z
         local Pos_Goal = simGetObjectPosition(Goal, BoddyRobot)
+        --print("Pos_Goal: ")
+        --print(Pos_Goal[1])
+        --print("Pos_Obj: ")
+        --print(Pos_Goal[2])
         -- Uses the distance formula to calculate the distance between the 
         -- robot and the goal
         local Dist_Obj=(((Pos_Goal[1]^2) + (Pos_Goal[2]^2))^(1/2))
@@ -63,6 +70,19 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         local Angle_Obj=math.deg(math.atan2((Pos_Goal[2]),((Pos_Goal[1]))))
         -- returns a tuple of the distance to the goal and the angle 
         return Dist_Obj, Angle_Obj 
+    end
+
+    Angle_To_Goal = function()
+        local pos_bot = simGetObjectPosition(BoddyRobot, Goal)
+        local dist_bot = (((pos_bot[1]^2) + (pos_bot[2]^2))^(1/2))
+        local angle_bot=math.deg(math.atan2((pos_bot[2]),((pos_bot[1]))))
+        return angle_bot
+    end
+
+    if(timestamp == 1) then
+        initial_angle = Angle_To_Goal()
+        print("Initial Angle")
+        print(initial_angle)
     end
 
     -- Go towards the target, rotating as necessary to adjust the angle. 
@@ -75,20 +95,21 @@ if (sim_call_type==sim_childscriptcall_actuation) then
             simSetJointTargetVelocity(rightMotor, speed*0)
         -- If the angle between the robot forward vector is greater than 
         -- the limit, rotate towards the goal
-        elseif angle >limit then
+        else
+            if angle >limit then
                 --simAddBanner((Dist_Rob_Mov),5,sim_banner_bitmapfont+sim_banner_overlay,nil,BoddyRobot,red,yellow)
             simSetJointTargetVelocity(leftMotor, speed * ((120 - angle)/150))
             simSetJointTargetVelocity(rightMotor, speed * 2.0)
-        -- If the angle between the robot forward vector is less than the limit
-        -- rotate the robot towards the goal
-        elseif angle<(-limit) then
-            simSetJointTargetVelocity(leftMotor, speed * 2.0)
-            simSetJointTargetVelocity(rightMotor, speed * ((120+angle)/150))
-        -- Otherwise, move forward at the default speed
-        else
-            simSetJointTargetVelocity(leftMotor, 1 * speed)
-            simSetJointTargetVelocity(rightMotor, 1 * speed)
-        end
+            -- If the angle between the robot forward vector is less than the limit
+            -- rotate the robot towards the goal
+            elseif angle<(-limit) then
+                simSetJointTargetVelocity(leftMotor, speed * 2.0)
+                simSetJointTargetVelocity(rightMotor, speed * ((120+angle)/150))
+            -- Otherwise, move forward at the default speed
+            else
+                simSetJointTargetVelocity(leftMotor, 1 * speed)
+                simSetJointTargetVelocity(rightMotor, 1 * speed)
+            end
         end
     end
 
@@ -104,7 +125,6 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         end
     end
 
-
     -- Execution Loop:
     -- Handle any child scripts
     simHandleChildScripts(sim_call_type)
@@ -115,6 +135,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
 
     -- If in the forward state, rotate towards the goal, or move towards it
     if state == 0 then
+        --print("State 0")
         -- If a wall is detected, change to the wall following state
         if (FrontAct > 0 ) then
             state = 1
@@ -125,12 +146,35 @@ if (sim_call_type==sim_childscriptcall_actuation) then
 
     -- If a wall is detected, follow the wall
     if state == 1 then
+        --print("State 1")
+        print("track_ang")
+        track_ang = Angle_To_Goal()
+        print(track_ang)
+        print("Absolute Difference")
+        print(math.abs(initial_angle - track_ang))
         if ( (FrontAct > 0)) then
-            Follow_Wall()
-        elseif ((angle<0)  and (angle> -90)) then
+            print("FrontAct: ")
+            print(FrontAct)
+
+            if (math.abs(initial_angle - track_ang) <= 1) then
+                state = 0
+                Go_Target()
+            else
+                Follow_Wall()
+            end
+        elseif (math.abs(initial_angle - track_ang) <= 1) then
+            print("Timestamp: ")
+            print(timestamp)
+            print("Initial angle: ")
+            print(math.abs(initial_angle))
+            print("Angle: ")
+            print(track_ang)
+            state = 0
             Go_Target()
         else
             Follow_Wall()
         end
     end
+
+    timestamp = timestamp + 1
 end 
