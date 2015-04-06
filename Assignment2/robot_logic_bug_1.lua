@@ -138,7 +138,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         --print("Circumnavigate_Object()")
         if (obstacle_detected > 0) then 
             simSetJointTargetVelocity(left_motor, speed * 1)
-            simSetJointTargetVelocity(right_motor, speed * -0.1)
+            simSetJointTargetVelocity(right_motor, speed * -0.4)
         else
             simSetJointTargetVelocity(left_motor, 1 * speed)
             simSetJointTargetVelocity(right_motor, 3.0 * speed)
