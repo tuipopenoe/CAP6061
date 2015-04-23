@@ -53,7 +53,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         Count_Disc=2
         Pos_Obj={}
         initial_follow_angle = 0
-        buffer_distance = 0.5
+        buff_d = 0.5
         -- d_reach = Calculate_Distance_To_Goal()
         -- d_followed = Calculate_Distance_To_Goal()
         laserScannerHandle_F=simGetObjectHandle("LaserScanner_2D_F")
@@ -280,20 +280,15 @@ if (sim_call_type==sim_childscriptcall_actuation) then
     end
 
     Follow_Wall = function()
-            Laser_90 = Read_Laser_Angle((90))
-            Laser_50=Read_Laser_Angle((50))
-            Laser_130=Read_Laser_Angle((130))
-            Laser_m50=Read_Laser_Angle((-50))
-            Laser_m130=Read_Laser_Angle((-130))
-            print("Laser90: ", Laser_90)
-            print("Lazr50: ", Laser_50)
-            print("Lazr130: ",  Laser_130)
-            print("Lazrm50: ",  Laser_m50)
-            print("Lazrm130: ",  Laser_m130)
-            if Laser_m50 < buffer_distance then
+            lazr1, lazr2, lazr3, lazr4 = Get_Lasers()
+            print("Lazr1: ", lazr1)
+            print("Lazr2: ", lazr2)
+            print("Lazr3: ", lazr3)
+            print("Lazr4: ", lazr4)
+            if lazr1 < buff_d then
                 simSetJointTargetVelocity(leftMotor,speed*(0.5))
                 simSetJointTargetVelocity(rightMotor,speed*(3))
-            elseif Laser_m130 < buffer_distance then
+            elseif lazr2 < buff_d then
                 simSetJointTargetVelocity(leftMotor,speed*(3))
                 simSetJointTargetVelocity(rightMotor,speed*(0.5))
             end
@@ -301,7 +296,6 @@ if (sim_call_type==sim_childscriptcall_actuation) then
 
     Get_Laser_Vector = function()
         local Pos_Goal=simGetObjectPosition(Goal,Zero_Point)
-        
         local Dist,angle=Dist_Ang_Rob_Point(Pos_Goal)
         local lazr_angle=math.floor(angle)
         local lazr_distance=Read_Laser_Angle((lazr_angle))
@@ -313,6 +307,14 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         local pos_obj_goal = simGetObjectPosition(Goal, BoddyRobot)
         local dist_obj = (((pos_obj_goal[1]^2) + (pos_obj_goal[2]^2))^(1/2))
         return dist_obj
+    end
+
+    Get_Lasers = function()
+        l1 = Read_Laser_Angle((-50))
+        l2 =Read_Laser_Angle((-130))
+        l3 =Read_Laser_Angle((50))
+        l4 =Read_Laser_Angle((130))
+        return l1, l2, l3, l4
     end
 
     Detect_Obstacle = function()
@@ -330,6 +332,15 @@ if (sim_call_type==sim_childscriptcall_actuation) then
             return false
         end
     end
+
+    Detect_Proximity_Obstacle = function()
+        l1, l2, l3, l4 = Get_Lasers()
+        if l1 > buff_d and l2 > buff_d and l3 > buff_d and l4 > buff_d then
+            return false
+        else
+            return true
+        end
+    end
     -- Move Directly towards the goal
     if state == 0 then
         -- Set d_reach
@@ -339,7 +350,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         if obstacle_detected then
             lazr_d, lazr_a = Get_Laser_Vector()
             print("Lazr d: ", lazr_d)
-            if lazr_d < buffer_distance then
+            if lazr_d < buff_d then
                 Follow_Wall()
                 initial_follow_angle = lazr_a
                 print("Initial follow angle: ", initial_follow_angle)
@@ -364,7 +375,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
     -- Follow the wall until d_followed < d_reach
     if state == 1 then
         d_followed = Calculate_Distance_To_Goal()
-        obstacle = Calculate_Nearest_Point()
+        obstacle = Detect_Proximity_Obstacle()
         print("State 1: d_followed = ", d_followed)
         if d_followed < d_reach - 0.1 and obstacle == false then
             Go_Point(Pos_Goal)
