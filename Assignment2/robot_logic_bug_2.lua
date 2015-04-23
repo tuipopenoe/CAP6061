@@ -172,9 +172,6 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         --print("State 1")
         print("track_ang")
         track_ang = Angle_To_Goal()
-        print(track_ang)
-        print("Absolute Difference")
-        print(math.abs(initial_angle - track_ang))
         if ( (FrontAct > 0)) then
             print("FrontAct: ")
             print(FrontAct)

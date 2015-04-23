@@ -211,13 +211,6 @@ if (sim_call_type==sim_childscriptcall_actuation) then
             Circumnavigate_Object()
         else
             current_distance = Distance_To_Goal()
-            print("Current Distance: ")
-            print(current_distance)
-            print("Minimum Distance: ")
-            print(minimum_distance)
-            print("Mark: ")
-            print(mark)
-            print(mark_time)
             -- If current is less than closest, set closest to current
             if current_distance < minimum_distance then
                 print("Setting New Minimum Distance: ")
