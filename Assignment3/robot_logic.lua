@@ -53,7 +53,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         Count_Disc=2
         Pos_Obj={}
         initial_follow_angle = 0
-        buff_d = 0.5
+        buffer_distance = 0.5
         -- d_reach = Calculate_Distance_To_Goal()
         -- d_followed = Calculate_Distance_To_Goal()
         laserScannerHandle_F=simGetObjectHandle("LaserScanner_2D_F")
@@ -285,10 +285,10 @@ if (sim_call_type==sim_childscriptcall_actuation) then
             print("Lazr2: ", lazr2)
             print("Lazr3: ", lazr3)
             print("Lazr4: ", lazr4)
-            if lazr1 < buff_d then
+            if lazr1 < buffer_distance then
                 simSetJointTargetVelocity(leftMotor,speed*(0.5))
                 simSetJointTargetVelocity(rightMotor,speed*(3))
-            elseif lazr2 < buff_d then
+            elseif lazr2 < buffer_distance then
                 simSetJointTargetVelocity(leftMotor,speed*(3))
                 simSetJointTargetVelocity(rightMotor,speed*(0.5))
             end
@@ -332,15 +332,6 @@ if (sim_call_type==sim_childscriptcall_actuation) then
             return false
         end
     end
-
-    Detect_Proximity_Obstacle = function()
-        l1, l2, l3, l4 = Get_Lasers()
-        if l1 > buff_d and l2 > buff_d and l3 > buff_d and l4 > buff_d then
-            return false
-        else
-            return true
-        end
-    end
     -- Move Directly towards the goal
     if state == 0 then
         -- Set d_reach
@@ -350,7 +341,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
         if obstacle_detected then
             lazr_d, lazr_a = Get_Laser_Vector()
             print("Lazr d: ", lazr_d)
-            if lazr_d < buff_d then
+            if lazr_d < buffer_distance then
                 Follow_Wall()
                 initial_follow_angle = lazr_a
                 print("Initial follow angle: ", initial_follow_angle)
@@ -375,7 +366,7 @@ if (sim_call_type==sim_childscriptcall_actuation) then
     -- Follow the wall until d_followed < d_reach
     if state == 1 then
         d_followed = Calculate_Distance_To_Goal()
-        obstacle = Detect_Proximity_Obstacle()
+        obstacle = Detect_Obstacle()
         print("State 1: d_followed = ", d_followed)
         if d_followed < d_reach - 0.1 and obstacle == false then
             Go_Point(Pos_Goal)
